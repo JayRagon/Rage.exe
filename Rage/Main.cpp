@@ -40,8 +40,8 @@ const string communicationPathL = "C:\\_Rage\\CommunicationL.txt";
 const string driverCommunicationPath = "\\DosDevices\\C:\\_Rage\\Communication.txt";
 
 //cfg
-int FOVX = 300;
-int FOVY = 300;
+long long FOVX = 300;
+long long FOVY = 300;
 int res = 2;
 byte silentAim = 0;
 
@@ -136,7 +136,7 @@ void HLoop() // the hack loop
 		HBITMAP hBitmap;
 		HDC hdc = GetDC(NULL);
 
-		unsigned char* pPixels = new unsigned char[(FOVX * 4 * FOVY)];
+		unsigned char* pPixels = new unsigned char[(FOVX * 4 * FOVY)]; // i think this needs fixing
 
 		//creating a bitmapheader for getting the dibits
 		BITMAPINFOHEADER bminfoheader;
