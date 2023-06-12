@@ -102,7 +102,6 @@ bool ScreenCaptureNBM(int x, int y, int w, int h, HBITMAP& outbit)
 
     HBITMAP hBitmap = CreateCompatibleBitmap(hdcSource, w, h);
     HBITMAP hBitmapOld = (HBITMAP)SelectObject(hdcMemory, hBitmap);
-    DeleteObject(hBitmap);
 
     BitBlt(hdcMemory, 0, 0, w, h, hdcSource, x, y, SRCCOPY);
     hBitmap = (HBITMAP)SelectObject(hdcMemory, hBitmapOld);
@@ -113,9 +112,6 @@ bool ScreenCaptureNBM(int x, int y, int w, int h, HBITMAP& outbit)
     HPALETTE hpal = NULL;
 
     outbit = hBitmap;
-
-    DeleteObject(hBitmap);
-    DeleteObject(hBitmapOld);
 
     return true;
 }

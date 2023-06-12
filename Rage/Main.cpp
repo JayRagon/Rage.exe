@@ -40,8 +40,8 @@ const string communicationPathL = "C:\\_Rage\\CommunicationL.txt";
 const string driverCommunicationPath = "\\DosDevices\\C:\\_Rage\\Communication.txt";
 
 //cfg
-LONG FOVX = 300;
-LONG FOVY = 300;
+int FOVX = 300;
+int FOVY = 300;
 int res = 2;
 byte silentAim = 0;
 
@@ -94,21 +94,6 @@ void Move(LONG x, LONG y)
 	KernelInterface Driver = KernelInterface("\\\\.\\ragedrv1");
 
 	Driver.SetMouse(x, y, 0);
-
-	/*
-	for (LONG i = 5; i > 0; i--)
-	{
-		Driver.SetMouse((x / (i + 1)) * 0.27, (y / (i + 1)) * 0.27, 0);
-		Sleep(5);
-	}
-
-	for (LONG i = 0; i < 5; i++)
-	{
-		Driver.SetMouse((x / (i + 1)) * 0.27, (y / (i + 1)) * 0.27, 0);
-		Sleep(5);
-	}
-	*/
-
 }
 
 void Click()
@@ -145,6 +130,8 @@ void HLoop() // the hack loop
 	{
 		//auto duration = high_resolution_clock::now();
 
+		HDC hdc = GetDC(NULL);
+
 		xAvg = 0;
 		yAvg = 0;
 
@@ -153,9 +140,8 @@ void HLoop() // the hack loop
 		// SCREENGRAB HERE
 		
 		HBITMAP hBitmap;
-		HDC hdc = GetDC(NULL);
 
-		unsigned char* pPixels = new unsigned char[arrSize];
+		unsigned char* pPixels = new unsigned char[(FOVX * 4 * FOVY)];
 
 		//ScreenCapture(SWC - (FOVX / 2), SHC - (FOVY / 2), FOVX, FOVY, "C:\\Users\\USER\\Desktop\\c++\\not exe\\fortnite.jpg", hBitmap);
 
@@ -175,18 +161,17 @@ void HLoop() // the hack loop
 				{
 					if (pixelsFound == 0) // change this later
 					{
-						xAvg = x + (SWC - (FOVX / 2));
-						yAvg = y + (SHC - (FOVY / 2));
+						xAvg += x + (SWC - (FOVX / 2));
+						yAvg += y + (SHC - (FOVY / 2));
 
-						//cout << "b = " << (int)pPixels[(FOVX * y + x) * 4 + 0] << endl;
 						pixelsFound++;
 					}
 				}
 			}
 		}
 
-
-		DeleteDC(hdc);
+		// NO MEMORY LEAKS YEAHHHHHH
+		DeleteDC(hdc); // delete the DC
 		DeleteObject(hBitmap); // delete the bitmap and all that
 		delete[] pPixels; // delete the array of rgb
 
@@ -198,8 +183,8 @@ void HLoop() // the hack loop
 		{
 			// avg out the results
 
-			//xAvg /= pixelsFound;
-			//yAvg /= pixelsFound;
+			xAvg /= pixelsFound;
+		    yAvg /= pixelsFound;
 
 			// AIM TIME! :3
 
@@ -223,7 +208,7 @@ void HLoop() // the hack loop
 
 				Move((int)xMove, (int)yMove);
 				//Click();
-				//Sleep(1);
+				Sleep(1);
 
 				if (silentAim == 1)
 				{
@@ -241,7 +226,7 @@ void HLoop() // the hack loop
 		//chrono::duration<double> elapsed = finish - duration;
 	    //cout << "Time: " << (elapsed.count() * 1000) << "ms" << endl;
 
-		//Sleep(5); // for safety
+		Sleep(2); // for safety
 	}
 }
 
