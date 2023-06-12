@@ -40,8 +40,8 @@ const string communicationPathL = "C:\\_Rage\\CommunicationL.txt";
 const string driverCommunicationPath = "\\DosDevices\\C:\\_Rage\\Communication.txt";
 
 //cfg
-long long FOVX = 300;
-long long FOVY = 300;
+LONG FOVX = 300;
+LONG FOVY = 300;
 int res = 2;
 byte silentAim = 0;
 
@@ -49,6 +49,8 @@ byte silentAim = 0;
 double xMove;
 double yMove;
 double sens;
+
+double sensScale;
 
 int startCoords; // DO NOT USE THESE, USE A RECTANGLE
 int finishCoords; // DO NOT USE THESE, USE A RECTANGLE
@@ -122,9 +124,26 @@ void HLoop() // the hack loop
 {
 	cout << "[+] Executed!\n\n";
 
+	LONG arrSize = (FOVX * 4 * FOVY);
+
+	sensScale = 1.074 * pow(sens, -0.9936827126);
+
+	//creating a bitmapheader for getting the dibits
+	BITMAPINFOHEADER bminfoheader;
+	::ZeroMemory(&bminfoheader, sizeof(BITMAPINFOHEADER));
+	bminfoheader.biSize = sizeof(BITMAPINFOHEADER);
+	bminfoheader.biWidth = FOVX;
+	bminfoheader.biHeight = -FOVY;
+	bminfoheader.biPlanes = 1;
+	bminfoheader.biBitCount = 32;
+	bminfoheader.biCompression = BI_RGB;
+	bminfoheader.biSizeImage = FOVX * 4 * FOVY;
+	bminfoheader.biClrUsed = 0;
+	bminfoheader.biClrImportant = 0;
+
 	for (;;)
 	{
-		auto duration = high_resolution_clock::now();
+		//auto duration = high_resolution_clock::now();
 
 		xAvg = 0;
 		yAvg = 0;
@@ -132,25 +151,11 @@ void HLoop() // the hack loop
 		pixelsFound = 0;
 
 		// SCREENGRAB HERE
-
+		
 		HBITMAP hBitmap;
 		HDC hdc = GetDC(NULL);
 
-		unsigned char* pPixels = new unsigned char[(FOVX * 4 * FOVY)]; // i think this needs fixing
-
-		//creating a bitmapheader for getting the dibits
-		BITMAPINFOHEADER bminfoheader;
-		::ZeroMemory(&bminfoheader, sizeof(BITMAPINFOHEADER));
-		bminfoheader.biSize = sizeof(BITMAPINFOHEADER);
-		bminfoheader.biWidth = FOVX;
-		bminfoheader.biHeight = -FOVY;
-		bminfoheader.biPlanes = 1;
-		bminfoheader.biBitCount = 32;
-		bminfoheader.biCompression = BI_RGB;
-
-		bminfoheader.biSizeImage = FOVX * 4 * FOVY;
-		bminfoheader.biClrUsed = 0;
-		bminfoheader.biClrImportant = 0;
+		unsigned char* pPixels = new unsigned char[arrSize];
 
 		//ScreenCapture(SWC - (FOVX / 2), SHC - (FOVY / 2), FOVX, FOVY, "C:\\Users\\USER\\Desktop\\c++\\not exe\\fortnite.jpg", hBitmap);
 
@@ -166,12 +171,12 @@ void HLoop() // the hack loop
 			{
 				if (MIN_R < pPixels[(FOVX * y + x) * 4 + 2] && MAX_R > pPixels[(FOVX * y + x) * 4 + 2]
 					&& MIN_G < pPixels[(FOVX * y + x) * 4 + 1] && MAX_G > pPixels[(FOVX * y + x) * 4 + 1]
-					&& MIN_B < pPixels[(FOVX * y + x) * 4 + 0] && MAX_B > pPixels[(FOVX * y + x) * 4 + 0]) // lol we don't care about blue, plus for some reason all the yellow outlines have either rg253 or rg252 so we are taking advantage of that
+					&& MIN_B < pPixels[(FOVX * y + x) * 4 + 0] && MAX_B > pPixels[(FOVX * y + x) * 4 + 0])
 				{
 					if (pixelsFound == 0) // change this later
 					{
-						xAvg += x + (SWC - (FOVX / 2));
-						yAvg += y + (SHC - (FOVY / 2));
+						xAvg = x + (SWC - (FOVX / 2));
+						yAvg = y + (SHC - (FOVY / 2));
 
 						//cout << "b = " << (int)pPixels[(FOVX * y + x) * 4 + 0] << endl;
 						pixelsFound++;
@@ -180,8 +185,12 @@ void HLoop() // the hack loop
 			}
 		}
 
-		DeleteObject(hBitmap);
+
+		DeleteDC(hdc);
+		DeleteObject(hBitmap); // delete the bitmap and all that
 		delete[] pPixels; // delete the array of rgb
+
+		
 
 		//cout << pixelsFound << "\n";
 
@@ -189,8 +198,8 @@ void HLoop() // the hack loop
 		{
 			// avg out the results
 
-			xAvg /= pixelsFound;
-			yAvg /= pixelsFound;
+			//xAvg /= pixelsFound;
+			//yAvg /= pixelsFound;
 
 			// AIM TIME! :3
 
@@ -207,17 +216,14 @@ void HLoop() // the hack loop
 				//xMove /= sens;
 				//yMove /= sens;
 
-				//xMove *= 1.05; // fov scaling to instaflick
-				//yMove *= 1.05; // fov scaling to instaflick
+				xMove *= sensScale;
+				yMove *= sensScale;
 
-				xMove *= 1.074 * pow(sens, -0.9936827126);
-				yMove *= 1.074 * pow(sens, -0.9936827126);
-
-			    yMove += 30; // offset because it only finds the top pixels
+			    yMove += 600 * sens; // offset because it only finds the top pixels
 
 				Move((int)xMove, (int)yMove);
 				//Click();
-				Sleep(1);
+				//Sleep(1);
 
 				if (silentAim == 1)
 				{
@@ -231,11 +237,11 @@ void HLoop() // the hack loop
 		}
 
 
-		auto finish = chrono::high_resolution_clock::now();
-		chrono::duration<double> elapsed = finish - duration;
-		//cout << "Time: " << (elapsed.count() * 1000) << "ms" << endl;
+		//auto finish = chrono::high_resolution_clock::now();
+		//chrono::duration<double> elapsed = finish - duration;
+	    //cout << "Time: " << (elapsed.count() * 1000) << "ms" << endl;
 
-		Sleep(5); // for safety
+		//Sleep(5); // for safety
 	}
 }
 
